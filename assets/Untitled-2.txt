@@ -1,0 +1,42 @@
+  if "sum-btn" in changed_id:
+            if groupby in measures:
+                grouped_df = create_agg_variable(values, 'sum', groupby, dff)
+                return grouped_df.to_html, pd.DataFrame.to_dict(dff)
+            else:
+                dash.no_update
+        elif "avg-btn" in changed_id:
+            if groupby in measures:
+                grouped_df = create_agg_variable(values, 'avg', groupby, dff)
+                return grouped_df.to_html, pd.DataFrame.to_dict(dff)
+            else:
+                dash.no_update
+
+        elif "min-btn" in changed_id:
+            if groupby in measures:
+                grouped_df = create_agg_variable(values, 'min', groupby, dff)
+                return grouped_df.to_html, pd.DataFrame.to_dict(dff)
+            else:
+                dash.no_update
+        elif "max-btn" in changed_id:
+            if groupby in measures:
+                grouped_df = create_agg_variable(values, 'max', groupby, dff)
+                return grouped_df.to_html, pd.DataFrame.to_dict(dff)
+            else:
+                dash.no_update
+        # elif "group-by-and-count-btn" in changed_id:
+        #     grouped_df = dff[[values]].groupby([values]).count()
+        #     return grouped_df.to_html, pd.DataFrame.to_dict(dff)
+        else:
+            raise PreventUpdate
+
+
+
+            ##############3
+
+            
+                        dbc.DropdownMenuItem("SUM", id="sum-btn"),
+                        dbc.DropdownMenuItem("AVG", id="avg-btn"),
+                        dbc.DropdownMenuItem("MIN", id="min-btn"),
+                        dbc.DropdownMenuItem("MAX", id="max-btn"),
+                        dbc.DropdownMenuItem("Group by and Count", id="group-by-and-count-btn"),
+                  

@@ -1,0 +1,382 @@
+body {
+  font-size: .875rem;
+}
+
+.feather {
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom;
+}
+
+.col-3{
+    display: inline-block;
+    float: none;
+    height: 100%;
+    color: coral;
+    font-size: 12px;
+    padding-bottom: 20px; 
+    padding-top: 18px;
+    margin-bottom: 4px;
+
+
+}
+
+.testimonial-group > .row {
+  overflow-x: auto;
+  width: 100%;
+  height: 100%;
+  white-space: nowrap;
+  display: inline-block;
+
+}
+
+.testimonial-group .row .list-group{
+  overflow-y: auto;
+  height: 400px;
+}
+
+.abc{
+  background-color: #9c6;
+}
+
+.naslovi{
+  border-bottom: black;
+  color: #007bff;
+}
+
+
+/*
+ * Sidebar
+ */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100; /* Behind the navbar */
+  padding: 48px 0 0; /* Height of navbar */
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+@media (max-width: 767.98px) {
+  .sidebar {
+    top: 5rem;
+  }
+}
+
+.sidebar-sticky {
+  position: relative;
+  top: 0;
+  height: calc(100vh - 48px);
+  padding-top: .5rem;
+  overflow-x: hidden;
+  overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+}
+
+@supports ((position: -webkit-sticky) or (position: sticky)) {
+  .sidebar-sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+}
+
+.sidebar .nav-link {
+  font-weight: 500;
+  color: #333;
+}
+
+.sidebar .nav-link .feather {
+  margin-right: 4px;
+  color: #999;
+}
+
+.sidebar .nav-link.active {
+  color: #007bff;
+}
+
+.sidebar .nav-link:hover .feather,
+.sidebar .nav-link.active .feather {
+  color: inherit;
+}
+
+.sidebar-heading {
+  font-size: .75rem;
+  text-transform: uppercase;
+}
+
+/*
+ * Navbar
+ */
+
+.navbar-brand {
+  padding-top: .75rem;
+  padding-bottom: .75rem;
+  font-size: 1rem;
+  background-color: rgba(0, 0, 0, .25);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.navbar .navbar-toggler {
+  top: .25rem;
+  right: 1rem;
+}
+
+.navbar .form-control {
+  padding: .75rem 1rem;
+  border-width: 0;
+  border-radius: 0;
+}
+
+.form-control-dark {
+  color: #fff;
+  background-color: rgba(255, 255, 255, .1);
+  border-color: rgba(255, 255, 255, .1);
+}
+
+.form-control-dark:focus {
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
+}
+/*
+@-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}
+
+@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}
+
+.chartjs-render-monitor{
+	-webkit-animation:chartjs-render-animation 0.001s;
+	animation:chartjs-render-animation 0.001s;
+	}
+*/
+
+.list-group-item{
+  background-color: #9c6;
+}
+
+.contax {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.box {
+  border: 3px solid #666;
+  background-color: #ddd;
+  border-radius: .5em;
+  padding: 10px;
+  cursor: move;
+}
+
+.contax .box .over { 
+  border: 3px dotted #666;
+}
+.grid-figure-container{
+  background-color: aliceblue;
+
+}
+
+
+.icon-holder {
+  background-color:burlywood;
+}
+
+.dragable-columns {
+  color:burlywood;
+  display: inline-block;
+}
+
+#current-graph{
+  margin: 0 0 0 0;
+  position: absolute;
+  height:530px;
+  width: 750px;
+}
+
+#bar-chart{
+  background-image: url("images/bar.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#bubble-chart{
+  background-image: url("images/bubble.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+.nav-item{
+  background-color:white;
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  border-radius: 1%;
+  margin-left: 10px;
+  margin-right: 40px;
+  margin-bottom:5px;
+}
+#map-chart{
+  background-image: url("images/mapbox-choropleth.png");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#scatter-maps-chart{
+  background-image: url("images/scatter-mapbox.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#density-maps-chart{
+  background-image: url("images/mapbox-density.png");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#bubble-maps-chart{
+  background-image: url("images/bubble-map.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#pie-chart{
+  background-image: url("images/pie-chart.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#scatter-chart{
+  background-image: url("images/scatter.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#line-chart{
+  background-image: url("images/line-plot.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#histogram-chart{
+  background-image: url("images/histogram.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#heat-chart{
+  background-image: url("images/histogram2d.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#box-plot-chart{
+  background-image: url("images/box.jpg");
+  background-size: cover;
+  opacity: 0.4;
+  height: 80px;
+  width: 80px;
+}
+
+#selected-columns{
+  width: 550px;
+  text-align: center;
+}
+#agg-radio-btn{
+  text-align: left;
+}
+
+.toast {
+  margin: 10px;
+  padding: 10px;
+}
+.grid-figure-container > div{
+  position: relative;
+}
+.fas.fa-info-circle{
+background: white;
+color: #17a2b8;
+position: absolute;
+top: 0;
+left: 0;
+margin-left: 4px;
+font-size: medium;
+border-radius: 1rem !important;
+
+}
+.bluered{
+  background-image: url("scapes/bluered.jpg");
+}
+
+.viridis{
+  background-image: url("scapes/viridis.jpg");
+}
+
+.cividis{
+  background-image: url("scapes/cividis.jpg");
+}
+
+.greys{
+  background-image: url("scapes/greys.jpg");
+}
+
+.inferno{
+  background-image: url("scapes/inferno.jpg");
+}
+
+.portland{
+  background-image: url("scapes/portland.jpg");
+}
+
+.darkmint{
+  background-image: url("scapes/darkmint.jpg");
+}
+
+.d-inline > ul {
+  top: 0%;
+  width: 130px;
+  list-style-type: disclosure-closed;
+}
+.d-inline > ul > li {
+  margin-bottom: 3px;
+  background-size: contain;
+}
+
+#radioitems-colorscale{
+  position: absolute;
+}
+
+#cell-1-1{
+  margin-left: 8px;
+}
+
+#dash-spreadsheet-inner{
+  min-width: 98%;
+}
+
+table{
+  position: absolute;
+  left: 0;
+}
+
+#cell-table{
+  position: absolute;
+  left: 0;
+}

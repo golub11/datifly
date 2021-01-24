@@ -1,9 +1,8 @@
 import base64
-import datetime
 import io
 import json
-
 import math
+
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -13,9 +12,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 from dash.dependencies import Input, Output, State
-import dash_daq as daq
 from dash.exceptions import PreventUpdate
-import plotly.io as pio
 
 # Ucitavanje postojecih CSS fajlova sa interneta
 # external_scripts = ['https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js',
@@ -235,7 +232,7 @@ def load_and_parse_contents(contents, filename, date):
     return html.Div([
         html.H5(filename),
         html.Br(),
-        dcc.Tabs(id='tabs-example', value='tab-1', children=[
+        dcc.Tabs(id='tabs-example', value='', children=[
             dcc.Tab(label='Preparation', value='Data'),
             dcc.Tab(label='Visualisation', value='Visualisation'),
         ]),
@@ -313,8 +310,10 @@ def show_table(list_of_contents, list_of_names, list_of_dates):
 
 # CALLBACK FOR SIDEBAR UPDATE UI
 @app.callback(Output('sidebar-features', 'children'),
-              [Input("tabs-example-content", "children")])
-def render_sidebar(data):
+              [Input("table", "columns"),
+               Input("storage-for-data", "data"),
+               ])
+def render_sidebar(cols,data):
 
     return (html.Label("Total "+str(len(measures)+len(dimensions)+len(date_time)) +" features",className="ml-3"),html.H6(
         className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted",
@@ -1508,488 +1507,488 @@ def show_chart(a, b, c, d, e, f, g, h, j, i, k, l, store, columns, rows, data,si
 def render_content(tab, data):
     df = pd.DataFrame.from_dict(data)
     max_appearance = np.zeros(df.columns.size)
+    if tab!= '':
+        if data is not None:
 
-    for i in range(0, df.columns.size):
-        # max_appearance[i] = -1
-        for j in range(0, df[df.columns[i]].nunique() - 1):
-            num_of_occurance = df[df[df.columns[i]].unique()[j] == df[df.columns[i]]].shape[0]
-            if max_appearance[i] < num_of_occurance:
-                max_appearance[i] = num_of_occurance
+            # ukoliko je izabran prvi tab, prikazi sadrzaj za sredjivanje podataka
+            if tab == 'Data':
 
-    sum(max_appearance)
+                #malo skuplja operacija...
+                for i in range(0, df.columns.size):
+                    # max_appearance[i] = -1
+                    for j in range(0, df[df.columns[i]].nunique() - 1):
+                        num_of_occurance = df[df[df.columns[i]].unique()[j] == df[df.columns[i]]].shape[0]
+                        if max_appearance[i] < num_of_occurance:
+                            max_appearance[i] = num_of_occurance
 
-    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+                sum(max_appearance)
 
-    if data is not None:
-        # ukoliko je izabran prvi tab, prikazi sadrzaj
-        if tab == 'Data':
-            return html.Div(className="container testimonial-group", children=[
-                html.Div(
-                    className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom",
-                    children=[
-                        html.H1("Data preparation", className="h2"),
-                        # html.Div(className="btn-toolbar mb-2 mb-md-0", children=[
-                        #     html.Div(className="btn-group mr-2", children=[
-                        #         html.Button("Share", type="button", className="btn btn-sm btn-outline-secondary"),
-                        #         html.Button("Export", type="button", className="btn btn-sm btn-outline-secondary")
-                        #     ]),
-                        #     html.Button("This week", type="button",
-                        #                 className="btn btn-sm btn-outline-secondary dropdown-toggle")
-                        # ]),
+                return html.Div(className="container testimonial-group", children=[
+                    html.Div(
+                        className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom",
+                        children=[
+                            html.H1("Data preparation", className="h2"),
+                            # html.Div(className="btn-toolbar mb-2 mb-md-0", children=[
+                            #     html.Div(className="btn-group mr-2", children=[
+                            #         html.Button("Share", type="button", className="btn btn-sm btn-outline-secondary"),
+                            #         html.Button("Export", type="button", className="btn btn-sm btn-outline-secondary")
+                            #     ]),
+                            #     html.Button("This week", type="button",
+                            #                 className="btn btn-sm btn-outline-secondary dropdown-toggle")
+                            # ]),
+                        ]),
+                    dbc.ButtonGroup(children=[
+                        dbc.DropdownMenu([
+                            dbc.DropdownMenuItem("NULL values", id="remove-nulls-btn", n_clicks=0),
+                            dbc.DropdownMenuItem("Whole column", id="remove-column-btn", n_clicks=0),
+                        ], label="Remove", className="m-1", color="primary", direction="right", group=True,
+                        ),
+                        dbc.Button("Standardize", className="m-1", id="standardize-btn", n_clicks=0),
+                        dbc.Button("Rename Column", id="rename-btn", n_clicks=0, className="m-1"),
+                        dbc.DropdownMenu([
+                            dbc.DropdownMenuItem("to String", id="change-to-string"),
+                            dbc.DropdownMenuItem("to Int", id="change-to-int"),
+                            dbc.DropdownMenuItem("to Date", id="change-to-date",header=True),
+                            dbc.DropdownMenuItem("Geographic role", header=True),
+                            dbc.DropdownMenuItem("to Longitude", id="change-to-longitude",header=True),
+                            dbc.DropdownMenuItem("to Latitude", id="change-to-latitude",header=True),
+                            dbc.DropdownMenuItem("to Country", id="change-to-country",header=True),
+                        ],  # dodati textarea po kliku na TEXT za dva parametra,
+                            # ostali samo za jedan parametar
+                            label="Change type", color="success", className="m-1", group=True),
+                        dbc.DropdownMenu([
+                            dbc.DropdownMenuItem("Text", id="text-btn"),
+                            dbc.DropdownMenuItem("Replace NULL with:", header=True),
+                            dbc.DropdownMenuItem("Custom Value", id="custom-value-btn"),
+                            dbc.DropdownMenuItem("Average", id="average-btn"),
+                            dbc.DropdownMenuItem("Mode", id="mode-btn")
+                        ],  # dodati textarea po kliku na TEXT za dva parametra,
+                            # ostali samo za jedan parametar
+                            label="Find & Replace", color="secondary", className="m-1", group=True),
+                        # dbc.Button("Count text matches", id="count-btn", className="m-1"),
+                        dbc.Button("Group By",id="groupby-btn", color="info", className="m-1"),
+                        # dbc.DropdownMenu([
+                        #
+                        # ], label="Math Functions", id="math-func", color="warning", className="m-1", group=True),
                     ]),
-                dbc.ButtonGroup(children=[
-                    dbc.DropdownMenu([
-                        dbc.DropdownMenuItem("NULL values", id="remove-nulls-btn", n_clicks=0),
-                        dbc.DropdownMenuItem("Whole column", id="remove-column-btn", n_clicks=0),
-                    ], label="Remove", className="m-1", color="primary", direction="right", group=True,
+
+                    dcc.Dropdown(
+                        options=[
+                            {'label': df.columns[i], 'value': df.columns[i]} for i in range(0, df.columns.size)
+                        ],
+                        multi=True,
+                        placeholder="First select column(s) and then action from buttons above",
+                        id="selected-columns"
                     ),
-                    dbc.Button("Standardize", className="m-1", id="standardize-btn", n_clicks=0),
-                    dbc.Button("Rename Column", id="rename-btn", n_clicks=0, className="m-1"),
-                    dbc.DropdownMenu([
-                        dbc.DropdownMenuItem("to String", id="change-to-string"),
-                        dbc.DropdownMenuItem("to Int", id="change-to-int"),
-                        dbc.DropdownMenuItem("to Date", id="change-to-date",header=True),
-                        dbc.DropdownMenuItem("Geographic role", header=True),
-                        dbc.DropdownMenuItem("to Longitude", id="change-to-longitude",header=True),
-                        dbc.DropdownMenuItem("to Latitude", id="change-to-latitude",header=True),
-                        dbc.DropdownMenuItem("to Country", id="change-to-country",header=True),
-                    ],  # dodati textarea po kliku na TEXT za dva parametra,
-                        # ostali samo za jedan parametar
-                        label="Change type", color="success", className="m-1", group=True),
-                    dbc.DropdownMenu([
-                        dbc.DropdownMenuItem("Text", id="text-btn"),
-                        dbc.DropdownMenuItem("Replace NULL with:", header=True),
-                        dbc.DropdownMenuItem("Custom Value", id="custom-value-btn"),
-                        dbc.DropdownMenuItem("Average", id="average-btn"),
-                        dbc.DropdownMenuItem("Mode", id="mode-btn")
-                    ],  # dodati textarea po kliku na TEXT za dva parametra,
-                        # ostali samo za jedan parametar
-                        label="Find & Replace", color="secondary", className="m-1", group=True),
-                    # dbc.Button("Count text matches", id="count-btn", className="m-1"),
-                    dbc.Button("Group By",id="groupby-btn", color="info", className="m-1"),
-                    # dbc.DropdownMenu([
-                    #
-                    # ], label="Math Functions", id="math-func", color="warning", className="m-1", group=True),
-                ]),
+                    html.Br(),
+                    html.Div([
+                        dbc.Toast([
+                            dbc.Input(id="to-replace", type="text", placeholder="Text to replace"),
+                            html.Br(),
+                            dbc.Input(id="value", type="text", placeholder="New Text Value"),
+                            dbc.Button('Confirm', className="mt-2", color="primary", id='confirm-replacing-btn', n_clicks=0)
 
-                dcc.Dropdown(
-                    options=[
-                        {'label': df.columns[i], 'value': df.columns[i]} for i in range(0, df.columns.size)
-                    ],
-                    multi=True,
-                    placeholder="First select column(s) and then action from buttons above",
-                    id="selected-columns"
-                ),
-                html.Br(),
-                html.Div([
-                    dbc.Toast([
-                        dbc.Input(id="to-replace", type="text", placeholder="Text to replace"),
-                        html.Br(),
-                        dbc.Input(id="value", type="text", placeholder="New Text Value"),
-                        dbc.Button('Confirm', className="mt-2", color="primary", id='confirm-replacing-btn', n_clicks=0)
+                        ],
+                            id="find-and-replace-toast",
+                            header="Find and Replace Text",
+                            icon="primary",
+                            dismissable=True,
+                            className="toast",
+                            is_open=False),
+                        dbc.Toast([
+                            dbc.Input(
+                                id='replace-with-custom-value-input',
+                                placeholder="Enter custom value...",
+                                value='',
+                                type="number",
 
-                    ],
-                        id="find-and-replace-toast",
-                        header="Find and Replace Text",
-                        icon="primary",
-                        dismissable=True,
-                        className="toast",
-                        is_open=False),
-                    dbc.Toast([
-                        dbc.Input(
-                            id='replace-with-custom-value-input',
-                            placeholder="Enter custom value...",
-                            value='',
-                            type="number",
+                            ),
 
-                        ),
+                            dbc.Button('Replace', className="mt-2", color="primary", id='replace-with-value-btn',
+                                       n_clicks=0)
+                        ],
+                            id="replace-with-value-toast",
+                            dismissable=True,
+                            header="Replace NULL with custom value",
+                            icon="primary",
+                            className="toast",
+                            is_open=False),
+                        dbc.Toast([
 
-                        dbc.Button('Replace', className="mt-2", color="primary", id='replace-with-value-btn',
-                                   n_clicks=0)
-                    ],
-                        id="replace-with-value-toast",
-                        dismissable=True,
-                        header="Replace NULL with custom value",
-                        icon="primary",
-                        className="toast",
-                        is_open=False),
-                    dbc.Toast([
+                            # dbc.DropdownMenuItem("SUM", id="sum-btn"),
+                            # dbc.DropdownMenuItem("AVG", id="avg-btn"),
+                            # dbc.DropdownMenuItem("MIN", id="min-btn"),
+                            # dbc.DropdownMenuItem("MAX", id="max-btn"),
+                            # dbc.DropdownMenuItem("Group by and Count", id="group-by-and-count-btn"),
+                            dbc.Label("Value:"),
+                            dcc.Dropdown(
+                                options=[
+                                    {'label': measures[i], 'value': measures[i]} for i in range(0, len(measures))
+                                ],
+                                id='groupby-value-input',
+                                placeholder="Value for selected aggregation function...",
 
-                        # dbc.DropdownMenuItem("SUM", id="sum-btn"),
-                        # dbc.DropdownMenuItem("AVG", id="avg-btn"),
-                        # dbc.DropdownMenuItem("MIN", id="min-btn"),
-                        # dbc.DropdownMenuItem("MAX", id="max-btn"),
-                        # dbc.DropdownMenuItem("Group by and Count", id="group-by-and-count-btn"),
-                        dbc.Label("Value:"),
-                        dcc.Dropdown(
-                            options=[
-                                {'label': measures[i], 'value': measures[i]} for i in range(0, len(measures))
-                            ],
-                            id='groupby-value-input',
-                            placeholder="Value for selected aggregation function...",
+                            ), dbc.Label("Choose the aggregation function"),
+                            dbc.RadioItems(options=[
+                                {"label": "SUM","value":1},
+                                {"label": "AVG","value":2},
+                                {"label": "MIN","value":3},
+                                {"label": "MAX","value":4},
+                                {"label": "Group by and COUNT","value":5},
+                                ],
+                            value=1,
+                            id="agg-radio-btn"),
+                            html.Br(),
 
-                        ), dbc.Label("Choose the aggregation function"),
-                        dbc.RadioItems(options=[
-                            {"label": "SUM","value":1},
-                            {"label": "AVG","value":2},
-                            {"label": "MIN","value":3},
-                            {"label": "MAX","value":4},
-                            {"label": "Group by and COUNT","value":5},
-                            ],
-                        value=1,
-                        id="agg-radio-btn"),
-                        html.Br(),
+                            # dbc.Checklist(options=[
+                            #     {"label":"Group by as new column","value":1},
+                            #    ],
+                            #     value=[],
+                            #     id="add-col-switch",
+                            #     switch=True
+                            # ),
+                            dbc.Button('Group By', className="mt-2", color="primary", id='confirm-group-by',
+                                       n_clicks=0)
+                        ],
+                            id="groupby-toast",
+                            dismissable=True,
+                            header="Measure column for Aggregation",
+                            icon="primary",
+                            className="toast",
+                            is_open=False),
+                        dbc.Toast([
+                            dbc.Input(
+                                id='text-to-count-input',
+                                placeholder="Enter text to count...",
+                                value='',
+                                type="text"
+                            ),
+                            dbc.Button('Count text', className="mt-2", color="warning", id='text-to-count-btn',
+                                       n_clicks=0),
+                            dbc.Checklist(
+                                options=[
+                                    {"label": "Add counted column", "value": 1}],
+                                id='add-column-counted-btn',
+                                value=[]
+                            )
+                        ],
+                            id="text-to-count-toast",
+                            dismissable=True,
+                            header="Text to count",
+                            icon="warning",
+                            className="toast",
+                            is_open=False),
+                        dbc.Toast([
+                            dbc.Input(
+                                id='rename-column-input',
+                                placeholder="Enter column's new name...",
+                                value='',
+                                type="text"
+                            ),
 
-                        # dbc.Checklist(options=[
-                        #     {"label":"Group by as new column","value":1},
-                        #    ],
-                        #     value=[],
-                        #     id="add-col-switch",
-                        #     switch=True
-                        # ),
-                        dbc.Button('Group By', className="mt-2", color="primary", id='confirm-group-by',
-                                   n_clicks=0)
-                    ],
-                        id="groupby-toast",
-                        dismissable=True,
-                        header="Measure column for Aggregation",
-                        icon="primary",
-                        className="toast",
-                        is_open=False),
-                    dbc.Toast([
-                        dbc.Input(
-                            id='text-to-count-input',
-                            placeholder="Enter text to count...",
-                            value='',
-                            type="text"
-                        ),
-                        dbc.Button('Count text', className="mt-2", color="warning", id='text-to-count-btn',
-                                   n_clicks=0),
-                        dbc.Checklist(
-                            options=[
-                                {"label": "Add counted column", "value": 1}],
-                            id='add-column-counted-btn',
-                            value=[]
-                        )
-                    ],
-                        id="text-to-count-toast",
-                        dismissable=True,
-                        header="Text to count",
-                        icon="warning",
-                        className="toast",
-                        is_open=False),
-                    dbc.Toast([
-                        dbc.Input(
-                            id='rename-column-input',
-                            placeholder="Enter column's new name...",
-                            value='',
-                            type="text"
-                        ),
+                            dbc.Button('Rename Column', className="mt-2", color="info", id='rename-column-button', n_clicks=0)
+                        ],
+                            id="add-column-toast",
+                            dismissable=True,
+                            header="Rename column",
+                            icon="info",
+                            className="toast",
+                            is_open=False
+                            ),
+                    ], className="grid-figure-container row text-center",
+                        style={"display": "grid", "gridTemplateColumns": "auto auto auto auto"}),
+                    html.Br(),
+                    html.Div(className="row text-center", children=[
+                        html.Div(n_clicks=0, children=[
+                            # rad sa frejmom i filtriranje podataka
+                            # vrsta podataka
+                            html.P("Dimension" if df.columns[i] in dimensions else "Measure" if df.columns[i] in measures else "Date", className="category-id"),
 
-                        dbc.Button('Rename Column', className="mt-2", color="info", id='rename-column-button', n_clicks=0)
-                    ],
-                        id="add-column-toast",
-                        dismissable=True,
-                        header="Rename column",
-                        icon="info",
-                        className="toast",
-                        is_open=False
-                        ),
-                ], className="grid-figure-container row text-center",
-                    style={"display": "grid", "gridTemplateColumns": "auto auto auto auto"}),
-                html.Br(),
-                html.Div(className="row text-center", children=[
-                    html.Div(n_clicks=0, children=[
-                        # rad sa frejmom i filtriranje podataka
-                        # vrsta podataka
-                        html.P("Dimension" if df.columns[i] in dimensions else "Measure" if df.columns[i] in measures else "Date", className="category-id"),
+                            # ime featurea
+                            html.H6([df.columns[i]], className="feature-name"),
 
-                        # ime featurea
-                        html.H6([df.columns[i]], className="feature-name"),
+                            # broj jedinstvenih vrednosti
+                            html.P(df[df.columns[i]].nunique(), className="num-unique-value"),
+                            html.Hr(),
 
-                        # broj jedinstvenih vrednosti
-                        html.P(df[df.columns[i]].nunique(), className="num-unique-value"),
-                        html.Hr(),
-
-                        # jedinstvene vrednosti po broju/procentu. gde je vrednost sa najvise
-                        html.Ul(className="list-group mr-3", children=[
-                            html.Li(style={'position': 'relative'},
-                                    children=[
-                                        dbc.Progress(style={"height": "25px"}, className="unique-progress",
-                                                     color="info", value=(df[df[df.columns[i]].unique()[j] == df[
-                                                df.columns[i]]].shape[0] / max_appearance[i]) * 100),
-                                        html.Div([
-                                            html.P(df[df.columns[i]].unique()[j], className="d-inline"),
-                                            html.P(" (" + str(
-                                                df[df[df.columns[i]].unique()[j] == df[df.columns[i]]].shape[0]) + ")",
-                                                   className="d-inline")
-                                        ],
-                                            className="unique-div d-inline",
-                                            style={'position': 'absolute', 'left': '0', 'top': 0, 'color': 'black',
-                                                   'overflow': 'hidden', 'width': '100%'})
-                                    ], className="mb-1") for j in range(0, df[df.columns[i]].nunique())
-
-                            # html.Li(df[df.columns[i]].unique()[j], className="list-group-item p-3 mb-2 bg-info text-white",
-                            #         style={"width": str((df[df[df.columns[i]].unique()[j]==df[df.columns[i]]].shape[0]/max_appearance[i])*100)+"%"})
-                        ])
-
-                        # df[df[df.columns[0]].unique()[1]==df[df.columns[0]]].shape[0]
-                    ], className="col-3 mr-2 bg-light shadow-sm border rounded")
-                    for i in range(0, df.columns.size)
-                ]),
-                # table,
-            ]),
-    # prikaz sadrzaja za drugi tab kada se ucitaju podaci
-    if data is not None:
-        if tab == 'Visualisation':
-            return html.Div([
-                html.Div(className="container", children=[
-                    html.Div(className="row ui-for-eda", children=[
-                        # srednji deo - trenutni graf/plot/figura
-                        html.Div(className="col-10", children=[
-                            html.Div(className="row", style={"height": "100%"}, children=[
-                                html.Div(className="col-2 p-0", children=[
-                                    html.Label("After changing any of paramaters below, click again on CHART IMAGE at right for rendering the new graph"),
-                                    html.Br(),
-                                    html.Label("Color"),
-                                    # daq.ColorPicker(
-                                    #     id='colorpicker',
-                                    #     label="Choose color",
-                                    #     size=150
-                                    # ),
-                                    dcc.Dropdown(
-                                        options=[
-                                            {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                            range(0, df.columns.size)
-                                        ],
-                                        id="dropdown-color"
-                                    ),
-                                    html.Br(),
-                                    html.H6("Detail"),
-                                    dcc.Dropdown(
-                                        options=[
-                                            {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                            range(0, df.columns.size)
-                                        ],
-                                        id="dropdown-detail",
-                                        multi=True
-                                    ),
-                                    html.Hr(),
-                                    html.H6("Size"),
-                                    dcc.Dropdown(
-                                        options=[
-                                            {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                            range(0, df.columns.size)
-                                        ],
-                                        id="dropdown-size"
-                                    ),
-                                    html.Br(),
-                                    html.H6("Adjust size"),
-                                    dcc.Slider(
-                                        id='size-slider',
-                                        min=10,
-                                        max=80,
-                                        step=5,
-                                        value=20,
-                                    ),
-
-                                    html.Br(),
-                                    html.P("Filter data"),
-                                    dcc.Dropdown(
-                                        options=[
-                                            {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                            range(0, df.columns.size)
-                                        ],
-                                        id="dropdown-filter",
-                                        multi=True,
-                                    ),
-                                    html.Div(id="div-for-filtering"),
-                                    html.Hr(),
-                                    # to do add callback for putting value in storage-for-figure
-                                    html.Div([
-                                        dbc.RadioItems(
-                                            options=[
-                                                {'label': '', 'value': x} for x in colorscales
+                            # jedinstvene vrednosti po broju/procentu. gde je vrednost sa najvise
+                            html.Ul(className="list-group mr-3", children=[
+                                html.Li(style={'position': 'relative'},
+                                        children=[
+                                            dbc.Progress(style={"height": "25px"}, className="unique-progress",
+                                                         color="info", value=(df[df[df.columns[i]].unique()[j] == df[
+                                                    df.columns[i]]].shape[0] / max_appearance[i]) * 100),
+                                            html.Div([
+                                                html.P(df[df.columns[i]].unique()[j], className="d-inline"),
+                                                html.P(" (" + str(
+                                                    df[df[df.columns[i]].unique()[j] == df[df.columns[i]]].shape[0]) + ")",
+                                                       className="d-inline")
                                             ],
-                                            value='',
-                                            id="radioitems-colorscale"
-                                        ),
-                                        html.Ul([
-                                            html.Li([], className="bluered"),
-                                            html.Li([], className="cividis"),
-                                            html.Li([], className="darkmint"),
-                                            html.Li([], className="greys"),
-                                            html.Li([], className="inferno"),
-                                            html.Li([], className="portland"),
-                                            html.Li([], className="viridis")
-                                        ], style={"position": "relative"})], className="d-inline",
-                                        style={'position': 'relative'}),
-                                    html.Hr(),
-                                    # html.H6("Faced rows"),
-                                    # dcc.Dropdown(
-                                    #     options=[
-                                    #         {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                    #         range(0, df.columns.size)
-                                    #     ],
-                                    #     id="dropdown-faced-rows",
-                                    #     multi=True
-                                    # ),
-                                    # html.H6("Faced column(s)"),
-                                    # dcc.Dropdown(
-                                    #     options=[
-                                    #         {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                    #         range(0, df.columns.size)
-                                    #     ],
-                                    #     id="dropdown-faced-cols",
-                                    #     multi=True
-                                    # ),
-                                ]),
-                                html.Div(className="col-10", children=[
-                                    html.Br(),
-                                    html.Div(className="row ml-1 mr-3 mb-1 bg-light border rounded", children=[
-                                        html.P("Columns", className="col-sm-3"),
-                                        html.Div([
-                                            dcc.Dropdown(
-                                                options=[
-                                                    {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                                    range(0, df.columns.size)
-                                                ],
-                                                multi=True,
-                                                id="dropdown-columns"
-                                            )
-                                        ], className="col-sm p-1")
-                                    ]),
-                                    html.Div(className="row ml-1 mr-3 mb-1 bg-light border rounded", children=[
-                                        html.P("Rows", className="col-sm-3"),
-                                        html.Div([
-                                            dcc.Dropdown(
-                                                options=[
-                                                    {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                                    range(0, df.columns.size)
-                                                ],
-                                                multi=True,
-                                                id="dropdown-rows"
-                                            )
-                                        ], className="col-sm p-1")
-                                    ]),
-                                    dbc.Button(["Check for chart"], id="check-for-chart", n_clicks=0, color="primary",
-                                               className="ml-1"),
-                                    html.Div(className="row", children=[
-                                        dcc.Graph(
-                                            id='current-graph',
+                                                className="unique-div d-inline",
+                                                style={'position': 'absolute', 'left': '0', 'top': 0, 'color': 'black',
+                                                       'overflow': 'hidden', 'width': '100%'})
+                                        ], className="mb-1") for j in range(0, df[df.columns[i]].nunique())
 
-                                        )
+                                # html.Li(df[df.columns[i]].unique()[j], className="list-group-item p-3 mb-2 bg-info text-white",
+                                #         style={"width": str((df[df[df.columns[i]].unique()[j]==df[df.columns[i]]].shape[0]/max_appearance[i])*100)+"%"})
+                            ])
+
+                            # df[df[df.columns[0]].unique()[1]==df[df.columns[0]]].shape[0]
+                        ], className="col-3 mr-2 bg-light shadow-sm border rounded")
+                        for i in range(0, df.columns.size)
+                    ]),
+                    # table,
+                ]),
+        # prikaz sadrzaja za drugi tab kada se ucitaju podaci
+            elif tab == 'Visualisation':
+                return html.Div([
+                    html.Div(className="container", children=[
+                        html.Div(className="row ui-for-eda", children=[
+                            # srednji deo - trenutni graf/plot/figura
+                            html.Div(className="col-10", children=[
+                                html.Div(className="row", style={"height": "100%"}, children=[
+                                    html.Div(className="col-2 p-0", children=[
+                                        html.Label("After changing any of paramaters below, click again on CHART IMAGE at right for rendering the new graph"),
+                                        html.Br(),
+                                        html.Label("Color"),
+                                        # daq.ColorPicker(
+                                        #     id='colorpicker',
+                                        #     label="Choose color",
+                                        #     size=150
+                                        # ),
+                                        dcc.Dropdown(
+                                            options=[
+                                                {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                                range(0, df.columns.size)
+                                            ],
+                                            id="dropdown-color"
+                                        ),
+                                        html.Br(),
+                                        html.H6("Detail"),
+                                        dcc.Dropdown(
+                                            options=[
+                                                {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                                range(0, df.columns.size)
+                                            ],
+                                            id="dropdown-detail",
+                                            multi=True
+                                        ),
+                                        html.Hr(),
+                                        html.H6("Size"),
+                                        dcc.Dropdown(
+                                            options=[
+                                                {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                                range(0, df.columns.size)
+                                            ],
+                                            id="dropdown-size"
+                                        ),
+                                        html.Br(),
+                                        html.H6("Adjust size"),
+                                        dcc.Slider(
+                                            id='size-slider',
+                                            min=10,
+                                            max=80,
+                                            step=5,
+                                            value=20,
+                                        ),
+
+                                        html.Br(),
+                                        html.P("Filter data"),
+                                        dcc.Dropdown(
+                                            options=[
+                                                {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                                range(0, df.columns.size)
+                                            ],
+                                            id="dropdown-filter",
+                                            multi=True,
+                                        ),
+                                        html.Div(id="div-for-filtering"),
+                                        html.Hr(),
+                                        # to do add callback for putting value in storage-for-figure
+                                        html.Div([
+                                            dbc.RadioItems(
+                                                options=[
+                                                    {'label': '', 'value': x} for x in colorscales
+                                                ],
+                                                value='',
+                                                id="radioitems-colorscale"
+                                            ),
+                                            html.Ul([
+                                                html.Li([], className="bluered"),
+                                                html.Li([], className="cividis"),
+                                                html.Li([], className="darkmint"),
+                                                html.Li([], className="greys"),
+                                                html.Li([], className="inferno"),
+                                                html.Li([], className="portland"),
+                                                html.Li([], className="viridis")
+                                            ], style={"position": "relative"})], className="d-inline",
+                                            style={'position': 'relative'}),
+                                        html.Hr(),
+                                        # html.H6("Faced rows"),
+                                        # dcc.Dropdown(
+                                        #     options=[
+                                        #         {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                        #         range(0, df.columns.size)
+                                        #     ],
+                                        #     id="dropdown-faced-rows",
+                                        #     multi=True
+                                        # ),
+                                        # html.H6("Faced column(s)"),
+                                        # dcc.Dropdown(
+                                        #     options=[
+                                        #         {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                        #         range(0, df.columns.size)
+                                        #     ],
+                                        #     id="dropdown-faced-cols",
+                                        #     multi=True
+                                        # ),
+                                    ]),
+                                    html.Div(className="col-10", children=[
+                                        html.Br(),
+                                        html.Div(className="row ml-1 mr-3 mb-1 bg-light border rounded", children=[
+                                            html.P("Columns", className="col-sm-3"),
+                                            html.Div([
+                                                dcc.Dropdown(
+                                                    options=[
+                                                        {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                                        range(0, df.columns.size)
+                                                    ],
+                                                    multi=True,
+                                                    id="dropdown-columns"
+                                                )
+                                            ], className="col-sm p-1")
+                                        ]),
+                                        html.Div(className="row ml-1 mr-3 mb-1 bg-light border rounded", children=[
+                                            html.P("Rows", className="col-sm-3"),
+                                            html.Div([
+                                                dcc.Dropdown(
+                                                    options=[
+                                                        {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                                        range(0, df.columns.size)
+                                                    ],
+                                                    multi=True,
+                                                    id="dropdown-rows"
+                                                )
+                                            ], className="col-sm p-1")
+                                        ]),
+                                        dbc.Button(["Check for chart"], id="check-for-chart", n_clicks=0, color="primary",
+                                                   className="ml-1"),
+                                        html.Div(className="row", children=[
+                                            dcc.Graph(
+                                                id='current-graph',
+
+                                            )
+                                        ]),
                                     ]),
                                 ]),
                             ]),
-                        ]),
 
-                        # preporuceni grafovi/plotovi/figure
-                        html.Div(className="col-2", children=[
-                            ### MODALS FOR INFO ABOUT CHARTS ###
-                            dbc.Modal([
-                                dbc.ModalHeader("Map chart header"),
-                                dbc.ModalBody("Choose COUNTRY NAME or SHORT CODE from dropmenu"),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-map-btn", className="ml-auto")
-                                )
-                            ], id="modal-map-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Scatter map header"),
-                                dbc.ModalBody("unavailable for now"),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-scatter-map-btn", className="ml-auto")
-                                )
-                            ], id="modal-scatter-map-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Density map chart header"),
-                                dbc.ModalBody("In column dropmenu choose LATITUDE. In row dropdown choose LONGITUDE. If coords are not in dataset, choose COUNTRY NAME or SHORT CODE from dropmenu"),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-density-map-btn", className="ml-auto")
-                                )
-                            ], id="modal-density-map-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Bubble map chart header"),
-                                    dbc.ModalBody("In column dropmenu choose LATITUDE. In row dropdown choose LONGITUDE. If coords are not in dataset, choose COUNTRY NAME or SHORT CODE from dropmenu. Separate by SIZE choosing feature from sidebar"),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-bubble-map-btn", className="ml-auto")
-                                )
-                            ], id="modal-bubble-map-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Paramaters for showing bar chart"),
-                                dbc.ModalBody("In column dropmenu choose ONE dimension. In row dropdown choose ONE measure."),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-bar-btn", className="ml-auto")
-                                )
-                            ], id="modal-bar-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Paramaters for showing Pie chart"),
-                                dbc.ModalBody("In column dropmenu choose ONE dimension. In row dropdown choose ONE measure."),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-pie-btn", className="ml-auto")
-                                )
-                            ], id="modal-pie-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Paramaters for showing Scatter chart"),
-                                dbc.ModalBody([html.P("In column dropmenu choose ONE measure."),html.P("In row dropdown choose ONE measure.")]),
-                                dbc.ModalFooter(
-                                    dbc.Button("Zatvori", id="close-info-scatter-btn", className="ml-auto")
-                                )
-                            ], id="modal-scatter-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Paramaters for Bubble chart "),
-                                dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ONE measure. On sidebar, choose ONE measure to separate by SIZE"),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-bubble-btn", className="ml-auto")
-                                )
-                            ], id="modal-bubble-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Paramaters for Line chart"),
-                                dbc.ModalBody("In column dropmenu choose ONE date. In row dropdown choose ONE measure."),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-line-btn", className="ml-auto")
-                                )
-                            ], id="modal-line-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Paramaters for Histogram chart"),
-                                dbc.ModalBody("In rows dropdown choose ONE measure."),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-histogram-btn", className="ml-auto")
-                                )
-                            ], id="modal-histogram-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Paramaters for Heatmap chart"),
-                                dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ONE measure."),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-heatmap-btn", className="ml-auto")
-                                )
-                            ], id="modal-heat-chart"),
-                            dbc.Modal([
-                                dbc.ModalHeader("Paramaters for Box-plot chart"),
-                                    dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ZERO/ONE dimension."),
-                                dbc.ModalFooter(
-                                    dbc.Button("Close", id="close-info-box-btn", className="ml-auto")
-                                )
-                            ], id="modal-box-chart"),
-                            #################
-                            dbc.Label("If coordinates aren't available (1,2 & 4 type of maps):"),
-                            dcc.Dropdown(
-                                options=[
-                                    {'label': dimensions[i], 'value': dimensions[i]} for i in
-                                    range(0, len(dimensions))
-                                ],
-                                id="dropdown-geo-code",
-                                placeholder="choose country/code"
-                            ),
-                            html.Div(choose_figure),
-                            dcc.Store(id="storage-for-figure", storage_type="memory"),
-                            html.Div([
+                            # preporuceni grafovi/plotovi/figure
+                            html.Div(className="col-2", children=[
+                                ### MODALS FOR INFO ABOUT CHARTS ###
+                                dbc.Modal([
+                                    dbc.ModalHeader("Map chart header"),
+                                    dbc.ModalBody("Choose COUNTRY NAME or SHORT CODE from dropmenu"),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-map-btn", className="ml-auto")
+                                    )
+                                ], id="modal-map-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Scatter map header"),
+                                    dbc.ModalBody("unavailable for now"),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-scatter-map-btn", className="ml-auto")
+                                    )
+                                ], id="modal-scatter-map-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Density map chart header"),
+                                    dbc.ModalBody("In column dropmenu choose LATITUDE. In row dropdown choose LONGITUDE. If coords are not in dataset, choose COUNTRY NAME or SHORT CODE from dropmenu"),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-density-map-btn", className="ml-auto")
+                                    )
+                                ], id="modal-density-map-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Bubble map chart header"),
+                                        dbc.ModalBody("In column dropmenu choose LATITUDE. In row dropdown choose LONGITUDE. If coords are not in dataset, choose COUNTRY NAME or SHORT CODE from dropmenu. Separate by SIZE choosing feature from sidebar"),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-bubble-map-btn", className="ml-auto")
+                                    )
+                                ], id="modal-bubble-map-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Paramaters for showing bar chart"),
+                                    dbc.ModalBody("In column dropmenu choose ONE dimension. In row dropdown choose ONE measure."),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-bar-btn", className="ml-auto")
+                                    )
+                                ], id="modal-bar-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Paramaters for showing Pie chart"),
+                                    dbc.ModalBody("In column dropmenu choose ONE dimension. In row dropdown choose ONE measure."),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-pie-btn", className="ml-auto")
+                                    )
+                                ], id="modal-pie-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Paramaters for showing Scatter chart"),
+                                    dbc.ModalBody([html.P("In column dropmenu choose ONE measure."),html.P("In row dropdown choose ONE measure.")]),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Zatvori", id="close-info-scatter-btn", className="ml-auto")
+                                    )
+                                ], id="modal-scatter-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Paramaters for Bubble chart "),
+                                    dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ONE measure. On sidebar, choose ONE measure to separate by SIZE"),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-bubble-btn", className="ml-auto")
+                                    )
+                                ], id="modal-bubble-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Paramaters for Line chart"),
+                                    dbc.ModalBody("In column dropmenu choose ONE date. In row dropdown choose ONE measure."),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-line-btn", className="ml-auto")
+                                    )
+                                ], id="modal-line-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Paramaters for Histogram chart"),
+                                    dbc.ModalBody("In rows dropdown choose ONE measure."),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-histogram-btn", className="ml-auto")
+                                    )
+                                ], id="modal-histogram-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Paramaters for Heatmap chart"),
+                                    dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ONE measure."),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-heatmap-btn", className="ml-auto")
+                                    )
+                                ], id="modal-heat-chart"),
+                                dbc.Modal([
+                                    dbc.ModalHeader("Paramaters for Box-plot chart"),
+                                        dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ZERO/ONE dimension."),
+                                    dbc.ModalFooter(
+                                        dbc.Button("Close", id="close-info-box-btn", className="ml-auto")
+                                    )
+                                ], id="modal-box-chart"),
+                                #################
+                                dbc.Label("If coordinates aren't available (1,2 & 4 type of maps):"),
+                                dcc.Dropdown(
+                                    options=[
+                                        {'label': dimensions[i], 'value': dimensions[i]} for i in
+                                        range(0, len(dimensions))
+                                    ],
+                                    id="dropdown-geo-code",
+                                    placeholder="choose country/code"
+                                ),
+                                html.Div(choose_figure),
+                                dcc.Store(id="storage-for-figure", storage_type="memory"),
+                                html.Div([
 
-                            ], className="row justify-content-start"),
+                                ], className="row justify-content-start"),
+                            ]),
                         ]),
                     ]),
                 ]),
-            ]),
 
 
 # Layout aplikacije

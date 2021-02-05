@@ -17,4 +17,4 @@ Install Python 3.6 or higher
 ~ pip install -r requirements.txt
 
 4. Run the development server.
-~ flask run
+~ flask run 

@@ -1,5 +1,6 @@
 Web application for data preparation and data visualisation...
 
+CLOUD:
 Link to non-complete cloud app: https://datafly-300602.oa.r.appspot.com/
 
 LOCAL:

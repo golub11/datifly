@@ -7,12 +7,15 @@ body {
   height: 16px;
   vertical-align: text-bottom;
 }
+.container-distribution{
+  background-color:#c48e8e;
+}
 
 .col-3{
     display: inline-block;
     float: none;
     height: 100%;
-    color: coral;
+    color: #262626;
     font-size: 12px;
     padding-bottom: 20px; 
     padding-top: 18px;
@@ -20,6 +23,7 @@ body {
 
 
 }
+
 
 .testimonial-group > .row {
   overflow-x: auto;
@@ -48,6 +52,15 @@ body {
 /*
  * Sidebar
  */
+
+ #sidebar-features{
+   background-color: #262626;
+ }
+
+ #dimensions-sidebar,#measures-sidebar,#date-sidebar{
+   font-size: 17px;
+   color: #ddd;
+ }
 
 .sidebar {
   position: fixed;
@@ -223,6 +236,7 @@ body {
   width: 80px;
 }
 
+
 #scatter-maps-chart{
   background-image: url("images/scatter-mapbox.jpg");
   background-size: cover;
@@ -380,3 +394,4 @@ table{
   position: absolute;
   left: 0;
 }
+

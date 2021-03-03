@@ -38,9 +38,33 @@ colorscales = ['bluered', 'portland', 'cividis', 'darkmint', 'greys', 'inferno',
 with open('countries.geojson') as response:
     countries = json.load(response)
 
-geo_locations = pd.DataFrame(countries['features'])
+# with open('geo-srbija.geojson',encoding="utf-8") as response:
+#     data = response.readlines()
+#     regioni_srbija = json.load(response)
+
+with open('geo-srb.geojson') as f:
+    regioni_srbija = json.load(f)
+
+with open('slo-regioni.geojson', encoding="utf-8") as f:
+    regioni_slovenija = json.load(f)
+
+
+geo_slo = pd.DataFrame(regioni_slovenija['features'])
+geo_srbija  = pd.DataFrame(regioni_srbija['features'])
+
+geo_okruzi = []
+for i in range(0,len(geo_srbija)):
+    geo_okruzi.append(geo_srbija['properties'][i]['name'])
+
+geo_slovenija = []
+for i in range(0,len(geo_srbija)):
+    geo_slovenija.append(geo_srbija['properties'][i]['name'])
+
+
 geo_names = []
 geo_short = []
+
+geo_locations = pd.DataFrame(countries['features'])
 for i in range(0,len(geo_locations)):
     geo_names.append(geo_locations['properties'][i]['ADMIN'])
     geo_short.append(geo_locations['properties'][i]['ISO_A3'])
@@ -97,10 +121,7 @@ choose_figure = html.Div(className="grid-figure-container row text-center",
 
 # Kod za navigacioni meni sa strane
 nav_bar = html.Nav(className="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow", children=[
-    html.A([html.I([],className="fas fa-chart-bar mr-1 text-white"),"Datifly project"], className="navbar-brand col-md-3 col-lg-2 mr-0 px-3"),
-    html.Button(className="navbar-toggler position-absolute d-md-none collapsed", type="button",
-                children=[html.Span(className="navbar-toggler-icon")]),
-    dcc.Input(className="form-control form-control-dark w-100", type="text", placeholder="Search")
+    html.A([html.I([],className="fas fa-chart-bar mr-1 text-white"),"Datifly project"], className="navbar-brand col-md-3 col-lg-2 mr-0 px-3")
 ])
 
 # kod za upload dataseta
@@ -124,6 +145,12 @@ upload_component = html.Div([
         # Do not allow multiple files to be uploaded
         multiple=False
     ),
+    html.Div(["ili izaberite ugradjene podatke:  ",dbc.Button('Za Srbiju', color="primary", className="mr-2", id="srbija",n_clicks=0),dbc.Button('Za Svet',color="success",id="svet",n_clicks=0)],
+             style={
+                 'width': '100%',
+                 'height': '60px',
+                 'lineHeight': '40px',
+             }),
     # dbc.Modal([dbc.Input(type="text", placeholder="Text to replace")],is_open=True),
     html.Div(id='output-data-upload'),
     html.Div(id='output-columns-upload'),
@@ -138,7 +165,7 @@ upload_component = html.Div([
 #     "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
 # })
 
-# df2 = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv')
+#df2 = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv')
 
 # fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group", width=500, height=350)
 
@@ -161,7 +188,126 @@ operators = [['ge ', '>='],
 
 PAGE_SIZE = 8
 
-def load_and_parse_contents(contents, filename, date):
+def load_and_parse_prepopulated_data(filename):
+    try:
+        if 'csv' in filename:
+            type_of_feature.clear()
+            measures.clear()
+            date_time.clear()
+            dimensions.clear()
+            # Assume that the user uploaded a CSV file
+            df = pd.read_csv(filename, encoding = 'utf-8', error_bad_lines=False)
+
+            for i in range(0, df.columns.size):
+                if df.columns[i].lower() == 'month':
+                    date_time.append(df.columns[i])
+                elif df.columns[i].lower() == 'year':
+                    date_time.append(df.columns[i])
+                elif df.columns[i].lower() == 'day':
+                    date_time.append(df.columns[i])
+                elif df.columns[i].lower() == 'week':
+                    date_time.append(df.columns[i])
+                elif df.columns[i].lower() == 'hours':
+                    date_time.append(df.columns[i])
+                elif df.columns[i].lower() == 'longitude' or df.columns[i].lower() == 'long' or df.columns[i].lower() == 'lon':
+                    type_of_feature[df.columns[i]] ="Longitude"
+                    dimensions.append(df.columns[i])
+                elif df.columns[i].lower() == 'latitude' or df.columns[i].lower() == 'lat':
+                    type_of_feature[df.columns[i]] = "Latitude"
+                    dimensions.append(df.columns[i])
+                elif isinstance(df[df.columns[i]][0], str):
+                    dimensions.append(df.columns[i])
+                else:
+                    measures.append(df.columns[i])
+        # elif 'xls' in filename:
+        #     # Assume that the user uploaded an excel file
+        #     type_of_feature.clear()
+        #     measures.clear()
+        #     date_time.clear()
+        #     dimensions.clear()
+        #     df = pd.read_excel(io.BytesIO(decoded))
+        #     for i in range(0, df.columns.size):
+        #         if df.columns[i].lower() == 'month':
+        #             type_of_feature[df.columns[i]] = 'Date (month)'
+        #         elif df.columns[i].lower() == 'year':
+        #             type_of_feature[df.columns[i]] = 'Date (year)'
+        #         elif df.columns[i].lower() == 'day':
+        #             type_of_feature[df.columns[i]] = 'Date (day)'
+        #         elif df.columns[i].lower() == 'week':
+        #             type_of_feature[df.columns[i]] = 'Date (week)'
+        #         elif df.columns[i].lower() == 'hours':
+        #             type_of_feature[df.columns[i]] = 'Date (hours)'
+        #         elif df.columns[i].lower() == 'longitude'or df.columns[i].lower() == 'long':
+        #             type_of_feature[df.columns[i]] = 'Longitude'
+        #         elif df.columns[i].lower() == 'latitude' or df.columns[i].lower() == 'lat':
+        #             type_of_feature[df.columns[i]] = 'Latitude'
+        #         elif isinstance(df[df.columns[i]][0], str):
+        #             type_of_feature[df.columns[i]] = 'Dimension'
+        #             dimensions.append(df.columns[i])
+        #         else:
+        #             type_of_feature[df.columns[i]] = 'Measure'
+        #             measures.append(df.columns[i])
+    except Exception as e:
+        print(e)
+        return html.Div([
+            'There was an error processing this file.'
+        ])
+    return html.Div([
+        html.H5(filename),
+        html.Br(),
+        dcc.Tabs(id='tabs-example', value='', children=[
+            dcc.Tab(label='Preparation', value='Data'),
+            dcc.Tab(label='Visualisation', value='Visualisation'),
+        ]),
+        html.Div(id='tabs-example-content'),
+        dcc.Store(id="storage-for-data", storage_type="memory", data=df.to_dict('records')),
+        html.Br(),
+        dbc.Button("Klikni za sintaksu filtriranja: ",id="filter-syntax",n_clicks=0),
+        dbc.Modal([
+            dbc.ModalHeader("Sintaksa za filtriranje numeričkih kolona: "),
+            dbc.ModalBody("eq n,> n,< n, n je realan broj"),
+            dbc.ModalHeader("Sintaksa za filtriranje teksualnih kolona(dovoljna su i prva par karktera trazenog teksta): "),
+            dbc.ModalBody("eq 'tekst', eq 'tek' "),
+            dbc.ModalFooter(
+                dbc.Button("Zatvori", id="close-info-filter-btn", className="ml-auto")
+            )
+        ], id="modal-filter-chart"),html.Br(),
+        html.Label("Data preview:"),
+        dash_table.DataTable(
+            id='table',
+            columns=[{'name': i, 'id': i, 'deletable': True, 'renamable': True} for i in df.columns],
+            style_table={'height': '250px', 'overflowY': 'auto','left':'0','border':'1px solid #6c757d'},
+            #row_deletable=True,
+
+            page_current=0,
+            page_size=PAGE_SIZE,
+            page_action='custom',
+
+            filter_action='custom',
+            filter_query='',
+
+            sort_action='custom',
+            sort_mode='multi',
+            sort_by=[],
+
+            style_data={
+                'width': '100px', 'minWidth': '60px', 'maxWidth': '150px',
+                'overflow': 'hidden',
+                'textOverflow': 'ellipsis'
+            }
+        ),
+        html.Br(),
+        html.Br(),
+        html.Hr(),  # horizontal line
+        html.Br(),
+
+
+    ],style={"position":"relative"})
+
+
+
+
+def load_and_parse_contents(contents, filename):
     content_type, content_string = contents.split(',')
 
     decoded = base64.b64decode(content_string)
@@ -173,7 +319,7 @@ def load_and_parse_contents(contents, filename, date):
             dimensions.clear()
             # Assume that the user uploaded a CSV file
             df = pd.read_csv(
-                io.StringIO(decoded.decode('cp1252')), error_bad_lines=False)
+                io.StringIO(decoded.decode('utf-8')), error_bad_lines=False)
 
             for i in range(0, df.columns.size):
                 if df.columns[i].lower() == 'month':
@@ -298,13 +444,23 @@ def split_filter_part(filter_part):
 
 # CALLBACK FOR LOADING & SHOWING DATA AND ALSO STORING IN DCC.STORE
 @app.callback(Output('output-data-upload', 'children'),
-              [Input('upload-data', 'contents')],
-              [State('upload-data', 'filename'),
-               State('upload-data', 'last_modified')])
-def show_table(list_of_contents, list_of_names, list_of_dates):
+              [Input('upload-data', 'contents'),
+              Input('srbija', 'n_clicks'),
+              Input('svet', 'n_clicks')],
+              [State('upload-data', 'filename')])
+def show_table(list_of_contents, srbijaDS, svetDS, list_of_names):
+
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
     if list_of_contents is not None:
-        tmp = load_and_parse_contents(list_of_contents, list_of_names, list_of_dates)
+        tmp = load_and_parse_contents(list_of_contents, list_of_names)
         return (tmp)  # , kolone
+    elif "srbija" in changed_id:
+        tmp = load_and_parse_prepopulated_data('test.csv')
+        return (tmp)  # , kolone
+    elif "svet" in changed_id:
+        tmp = load_and_parse_prepopulated_data('svet.csv')
+        return (tmp)  # , kolone
+
     else:
         return dash.no_update
 
@@ -314,12 +470,14 @@ def show_table(list_of_contents, list_of_names, list_of_dates):
                Input("storage-for-data", "data"),
                ])
 def render_sidebar(cols,data):
-
-    return (html.Label("Total "+str(len(measures)+len(dimensions)+len(date_time)) +" features",className="ml-3"),html.H6(
-        className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted",
+    global measures
+    global date_time
+    global dimensions
+    return (html.Label("Ukupno "+str(len(measures)+len(dimensions)+len(date_time)) +" dimenzija",className="ml-3 text-light"),html.H6(
+        className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted ",
         children=[
 
-            html.Span("Dimensions"),
+            html.H2("Kategorije",id="dimensions-sidebar"),
         ]),
           html.Ul(className="nav flex-column", children=[
               html.Li(className="nav-item", children=[
@@ -329,7 +487,7 @@ def render_sidebar(cols,data):
           html.H6(
               className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted",
               children=[
-                  html.Span("Measures"),
+                  html.H2("Numeričke",id="measures-sidebar"),
               ]),
           html.Ul(className="nav flex-column", children=[
               html.Li(className="nav-item", children=[
@@ -339,7 +497,7 @@ def render_sidebar(cols,data):
         html.H6(
             className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted",
             children=[
-                html.Span("Date"),
+                html.Span("Kalendar",id="date-sidebar"),
             ]),
         html.Ul(className="nav flex-column", children=[
             html.Li(className="nav-item", children=[
@@ -867,10 +1025,10 @@ def info_about_map_chart(n1, n2, is_open):
 
 
 @app.callback(
-    Output("modal-histogram-chart", "is_open"),
-    [Input("info-histogram", "n_clicks"),
-     Input("close-info-histogram-btn", "n_clicks")],
-    [State("modal-histogram-chart", "is_open")],
+    Output("modal-filter-chart", "is_open"),
+    [Input("filter-syntax", "n_clicks"),
+     Input("close-info-filter-btn", "n_clicks")],
+    [State("modal-filter-chart", "is_open")],
 )
 def info_about_map_chart(n1, n2, is_open):
     if n1 or n2:
@@ -1256,6 +1414,7 @@ def show_chart(a, b, c, d, e, f, g, h, j, i, k, l, store, columns, rows, data,si
     global df_filtered
     global geo_names
     global geo_short
+    global geo_okruzi
 
     if "storage-for-figure" in changed_id:
         if filtered != True:
@@ -1286,18 +1445,20 @@ def show_chart(a, b, c, d, e, f, g, h, j, i, k, l, store, columns, rows, data,si
         # if color in measures and colorscale != '':
         key=""
         # ako je kolona code od 3 karaktera
-        if len(df[short_code][0]) == 3:
-            key="properties.ISO_A3"
-        else:
-            key="properties.ADMIN"
+       # if len(df[short_code][0]) == 3:
+        #    key="properties.ISO_A3"
+        #else:
+        #    key="properties.ADMIN"
 
-        fig = px.choropleth_mapbox(df, geojson=countries,
+        fig = px.choropleth_mapbox(df,
+                               #geojson=regioni_srbija,
+                               geojson=regioni_slovenija,
                                locations=short_code,
-                               featureidkey=key,
+                               featureidkey="properties.name",
                                color=color,
                                color_continuous_scale="Viridis",
                                mapbox_style="carto-positron",
-                               zoom=2, center={"lat": 0.0902, "lon": -20.7129},
+                               zoom=3, center={"lat": 40.7000, "lon": 5.7129},
                                opacity=1.0,hover_data=detail)
         fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         return fig
@@ -1505,6 +1666,9 @@ def show_chart(a, b, c, d, e, f, g, h, j, i, k, l, store, columns, rows, data,si
               [Input('tabs-example', 'value'),
                Input("storage-for-data", "data")])
 def render_content(tab, data):
+    global measures
+    global dimensions
+    global date_time
     df = pd.DataFrame.from_dict(data)
     max_appearance = np.zeros(df.columns.size)
     if tab!= '':
@@ -1621,6 +1785,7 @@ def render_content(tab, data):
                             # dbc.DropdownMenuItem("MAX", id="max-btn"),
                             # dbc.DropdownMenuItem("Group by and Count", id="group-by-and-count-btn"),
                             dbc.Label("Value:"),
+                            app.logger.info("message"),
                             dcc.Dropdown(
                                 options=[
                                     {'label': measures[i], 'value': measures[i]} for i in range(0, len(measures))
@@ -1702,7 +1867,7 @@ def render_content(tab, data):
                         html.Div(n_clicks=0, children=[
                             # rad sa frejmom i filtriranje podataka
                             # vrsta podataka
-                            html.P("Dimension" if df.columns[i] in dimensions else "Measure" if df.columns[i] in measures else "Date", className="category-id"),
+                            html.P("Kategorijska kolona" if df.columns[i] in dimensions else "Numerička kolona" if df.columns[i] in measures else "Vremenska(kalendar) kolona", className="category-id"),
 
                             # ime featurea
                             html.H6([df.columns[i]], className="feature-name"),
@@ -1845,8 +2010,8 @@ def render_content(tab, data):
                                     ]),
                                     html.Div(className="col-10", children=[
                                         html.Br(),
-                                        html.Div(className="row ml-1 mr-3 mb-1 bg-light border rounded", children=[
-                                            html.P("Columns", className="col-sm-3"),
+                                        html.Div(className="row ml-1 mr-3 mb-1 bg-primary border rounded", children=[
+                                            html.P("Kolone", className="col-sm-3 text-light font-weight-bold"),
                                             html.Div([
                                                 dcc.Dropdown(
                                                     options=[
@@ -1858,8 +2023,8 @@ def render_content(tab, data):
                                                 )
                                             ], className="col-sm p-1")
                                         ]),
-                                        html.Div(className="row ml-1 mr-3 mb-1 bg-light border rounded", children=[
-                                            html.P("Rows", className="col-sm-3"),
+                                        html.Div(className="row ml-1 mr-3 mb-1 bg-primary border rounded", children=[
+                                            html.P("Vrste", className="col-sm-3 text-light font-weight-bold"),
                                             html.Div([
                                                 dcc.Dropdown(
                                                     options=[
@@ -1871,7 +2036,7 @@ def render_content(tab, data):
                                                 )
                                             ], className="col-sm p-1")
                                         ]),
-                                        dbc.Button(["Check for chart"], id="check-for-chart", n_clicks=0, color="primary",
+                                        dbc.Button(["Izaberi grafikon"], id="check-for-chart", n_clicks=0, color="primary",
                                                    className="ml-1"),
                                         html.Div(className="row", children=[
                                             dcc.Graph(
@@ -1890,42 +2055,42 @@ def render_content(tab, data):
                                     dbc.ModalHeader("Map chart header"),
                                     dbc.ModalBody("Choose COUNTRY NAME or SHORT CODE from dropmenu"),
                                     dbc.ModalFooter(
-                                        dbc.Button("Close", id="close-info-map-btn", className="ml-auto")
+                                        dbc.Button("Zatvori", id="close-info-map-btn", className="ml-auto")
                                     )
                                 ], id="modal-map-chart"),
                                 dbc.Modal([
                                     dbc.ModalHeader("Scatter map header"),
                                     dbc.ModalBody("unavailable for now"),
                                     dbc.ModalFooter(
-                                        dbc.Button("Close", id="close-info-scatter-map-btn", className="ml-auto")
+                                        dbc.Button("Zatvori", id="close-info-scatter-map-btn", className="ml-auto")
                                     )
                                 ], id="modal-scatter-map-chart"),
                                 dbc.Modal([
                                     dbc.ModalHeader("Density map chart header"),
                                     dbc.ModalBody("In column dropmenu choose LATITUDE. In row dropdown choose LONGITUDE. If coords are not in dataset, choose COUNTRY NAME or SHORT CODE from dropmenu"),
                                     dbc.ModalFooter(
-                                        dbc.Button("Close", id="close-info-density-map-btn", className="ml-auto")
+                                        dbc.Button("Zatvori", id="close-info-density-map-btn", className="ml-auto")
                                     )
                                 ], id="modal-density-map-chart"),
                                 dbc.Modal([
                                     dbc.ModalHeader("Bubble map chart header"),
                                         dbc.ModalBody("In column dropmenu choose LATITUDE. In row dropdown choose LONGITUDE. If coords are not in dataset, choose COUNTRY NAME or SHORT CODE from dropmenu. Separate by SIZE choosing feature from sidebar"),
                                     dbc.ModalFooter(
-                                        dbc.Button("Close", id="close-info-bubble-map-btn", className="ml-auto")
+                                        dbc.Button("Zatvori", id="close-info-bubble-map-btn", className="ml-auto")
                                     )
                                 ], id="modal-bubble-map-chart"),
                                 dbc.Modal([
                                     dbc.ModalHeader("Paramaters for showing bar chart"),
                                     dbc.ModalBody("In column dropmenu choose ONE dimension. In row dropdown choose ONE measure."),
                                     dbc.ModalFooter(
-                                        dbc.Button("Close", id="close-info-bar-btn", className="ml-auto")
+                                        dbc.Button("Zatvori", id="close-info-bar-btn", className="ml-auto")
                                     )
                                 ], id="modal-bar-chart"),
                                 dbc.Modal([
                                     dbc.ModalHeader("Paramaters for showing Pie chart"),
                                     dbc.ModalBody("In column dropmenu choose ONE dimension. In row dropdown choose ONE measure."),
                                     dbc.ModalFooter(
-                                        dbc.Button("Close", id="close-info-pie-btn", className="ml-auto")
+                                        dbc.Button("Zatvori", id="close-info-pie-btn", className="ml-auto")
                                     )
                                 ], id="modal-pie-chart"),
                                 dbc.Modal([
@@ -1939,14 +2104,14 @@ def render_content(tab, data):
                                     dbc.ModalHeader("Paramaters for Bubble chart "),
                                     dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ONE measure. On sidebar, choose ONE measure to separate by SIZE"),
                                     dbc.ModalFooter(
-                                        dbc.Button("Close", id="close-info-bubble-btn", className="ml-auto")
+                                        dbc.Button("Zatvori", id="close-info-bubble-btn", className="ml-auto")
                                     )
                                 ], id="modal-bubble-chart"),
                                 dbc.Modal([
                                     dbc.ModalHeader("Paramaters for Line chart"),
                                     dbc.ModalBody("In column dropmenu choose ONE date. In row dropdown choose ONE measure."),
                                     dbc.ModalFooter(
-                                        dbc.Button("Close", id="close-info-line-btn", className="ml-auto")
+                                        dbc.Button("Zatvori", id="close-info-line-btn", className="ml-auto")
                                     )
                                 ], id="modal-line-chart"),
                                 dbc.Modal([
@@ -1971,7 +2136,8 @@ def render_content(tab, data):
                                     )
                                 ], id="modal-box-chart"),
                                 #################
-                                dbc.Label("If coordinates aren't available (1,2 & 4 type of maps):"),
+                                html.Div([
+                                dbc.Label("If coordinates aren't available (1,2 & 4 type of maps):",className="text-light"),
                                 dcc.Dropdown(
                                     options=[
                                         {'label': dimensions[i], 'value': dimensions[i]} for i in
@@ -1979,7 +2145,7 @@ def render_content(tab, data):
                                     ],
                                     id="dropdown-geo-code",
                                     placeholder="choose country/code"
-                                ),
+                                )], className="bg-primary"),
                                 html.Div(choose_figure),
                                 dcc.Store(id="storage-for-figure", storage_type="memory"),
                                 html.Div([
@@ -1995,7 +2161,7 @@ def render_content(tab, data):
 app.layout = html.Div(children=[nav_bar,
                                 html.Div(className="container-fluid", children=[
                                     html.Div(className="row", children=[
-                                        html.Nav(className="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse",
+                                        html.Nav(className="col-md-3 col-lg-2 d-md-block bg-primary sidebar collapse",
                                                  id="sidebarMenu", children=[
                                                 html.Div(className="sidebar-sticky pt-3", children=[
 

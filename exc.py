@@ -1,18 +1,9 @@
-import numpy as np
-import pandas as pd
+import textdistance
 
-dic = [{'name': 'Nikola'}, {'name':'Milorad'}, {'name':'Masa'}]
-print (dic[1]['name'])
+textdistance.jaro_winkler("messi","mess")
 
-# initialize list of lists
-data = [['tom', 10], ['nick', 15], ['juli', 14]]
-
-# Create the pandas DataFrame
-df = pd.DataFrame(data, columns=['Name', 'Age'])
-
-# print dataframe.
-print(df.columns)
-
-a = [[i] for i in df.columns]
-
-print(a)
+# poredjenje i dokaz primera koji smo koristili pri definisanju sličnosti u 2. poglavlju
+textdistance.jaro_winkler("automobil","auiotobil")
+# vraca 0.9074074074074073
+textdistance.jaro_winkler("automobil","auiomobtl")
+# vraca 0.8814814814814814

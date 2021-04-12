@@ -24,6 +24,15 @@ body {
 
 }
 
+.theme-dark{
+  background-color: #262626;
+  color: white;
+}
+
+.theme-brown{
+    background-color: dimgrey;
+}
+
 
 .testimonial-group > .row {
   overflow-x: auto;

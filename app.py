@@ -1,3 +1,10 @@
+####################
+
+# DATIFY IS WEB APLICATION FOR DATA MANIPULATION. YOU CAN ANALIZE, EDIT, REARANGE AND VISUALISE YOUR DATA.
+# IN UPCOMING UPDATES IT EXPECETED PRIMARLY TO OPTIMIZE THE APP AND MAKE APIs FOR FURTHER DEVELOPMENT
+
+
+####################
 import base64
 import io
 import json
@@ -207,26 +214,23 @@ def load_and_parse_prepopulated_data(filename):
             df = pd.read_csv(filename, encoding = 'utf-8', error_bad_lines=False)
 
             for i in range(0, df.columns.size):
-                if df.columns[i].lower() == 'month':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'year':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'day':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'week':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'hours':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'date':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'longitude' or df.columns[i].lower() == 'long' or df.columns[i].lower() == 'lon':
-                    type_of_feature[df.columns[i]] ="Longitude"
+                if df.columns[i].lower() == 'longitude' or df.columns[i].lower() == 'long' or df.columns[
+                    i].lower() == 'lon':
+                    type_of_feature[df.columns[i]] = "Longitude"
                     dimensions.append(df.columns[i])
                 elif df.columns[i].lower() == 'latitude' or df.columns[i].lower() == 'lat':
                     type_of_feature[df.columns[i]] = "Latitude"
                     dimensions.append(df.columns[i])
                 elif isinstance(df[df.columns[i]][0], str):
-                    dimensions.append(df.columns[i])
+                    try:
+                        kalendar_kolona = df[df.columns[i]].str.split("-", n=2)
+                        date = int(kalendar_kolona[0][0])
+                        date1 = int(kalendar_kolona[0][1])
+                        date2 = int(kalendar_kolona[0][2])
+                        date_time.append(df.columns[i])
+                    except:
+                        dimensions.append(df.columns[i])
+
                 else:
                     measures.append(df.columns[i])
         # elif 'xls' in filename:
@@ -340,26 +344,24 @@ def load_and_parse_contents(contents, filename):
                 io.StringIO(decoded.decode('utf-8')), error_bad_lines=False)
 
             for i in range(0, df.columns.size):
-                if df.columns[i].lower() == 'month':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'year':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'day':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'week':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'hours':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'date':
-                    date_time.append(df.columns[i])
-                elif df.columns[i].lower() == 'longitude' or df.columns[i].lower() == 'long' or df.columns[i].lower() == 'lon':
-                    type_of_feature[df.columns[i]] ="Longitude"
+
+                if df.columns[i].lower() == 'longitude' or df.columns[i].lower() == 'long' or df.columns[
+                    i].lower() == 'lon':
+                    type_of_feature[df.columns[i]] = "Longitude"
                     dimensions.append(df.columns[i])
                 elif df.columns[i].lower() == 'latitude' or df.columns[i].lower() == 'lat':
                     type_of_feature[df.columns[i]] = "Latitude"
                     dimensions.append(df.columns[i])
                 elif isinstance(df[df.columns[i]][0], str):
-                    dimensions.append(df.columns[i])
+                    try:
+                        kalendar_kolona =df[df.columns[i]].str.split("-", n=2)
+                        date = int(kalendar_kolona[0][0])
+                        date1 = int(kalendar_kolona[0][1])
+                        date2 = int(kalendar_kolona[0][2])
+                        date_time.append(df.columns[i])
+                    except:
+                        dimensions.append(df.columns[i])
+
                 else:
                     measures.append(df.columns[i])
         # elif 'xls' in filename:
@@ -549,11 +551,18 @@ def render_sidebar(cols,data):
     [Input('table', "page_current"),
      Input('table', "page_size"),
      Input('table', 'sort_by'),
-     Input('table', 'filter_query')],
+     Input('table', 'filter_query'),
+    # Input('sidebar-features', 'children'),
+     ],
     State("storage-for-data", "data"))
-def update_table(page_current, page_size, sort_by, filter, data):
+def update_table(page_current, page_size, sort_by, filter,data):
     filtering_expressions = filter.split(' && ')
     dff = pd.DataFrame.from_dict(data)
+
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    # if 'sidebar-features' in changed_id:
+    #     dff.iloc[page_current * page_size:(page_current + 1) * page_size].to_dict('records')
+
     for filter_part in filtering_expressions:
         col_name, operator, filter_value = split_filter_part(filter_part)
 
@@ -675,15 +684,13 @@ dataset = pd.DataFrame()
                State("text-to-count-input","value"),
                State("rename-column-input","value"),
                State("add-column-counted-btn","value"),
-
-               State("change-lang-calendar","value"),
                State("change-format-day","value"),
                State("change-format-month","value"),
                State("change-format-year","value"),
                State("change-format-calendar-radio-btn","value"),
 
                ])
-def changing_dataset(a, b, c, d, e, f, to_string, to_int,to_lon,to_lat,to_eng,to_srb,to_slo,groupby_btn,text_to_count_btn,new_col_btn,replace_btn,to_calendar,data, values, to_replace,value,agg_radio_button,replace_null_with,groupby,text_to_count_input, new_name_col,add_counted_col, lang_calendar, format_day, format_month, format_year, format_calendar):
+def changing_dataset(a, b, c, d, e, f, to_string, to_int,to_lon,to_lat,to_eng,to_srb,to_slo,groupby_btn,text_to_count_btn,new_col_btn,replace_btn,to_calendar,data, values, to_replace,value,agg_radio_button,replace_null_with,groupby,text_to_count_input, new_name_col,add_counted_col, format_day, format_month, format_year, format_calendar):
     from statistics import mode
 
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
@@ -701,7 +708,6 @@ def changing_dataset(a, b, c, d, e, f, to_string, to_int,to_lon,to_lat,to_eng,to
             # TO-DO
             dff.rename(columns={values[0]: 'Geo. širina'}, inplace=True, errors="raise")
         if "confirm-change-to-calendar-btn" in changed_id:
-            print(lang_calendar)
             print(format_day)
             print(format_month)
             print(format_year)
@@ -715,7 +721,7 @@ def changing_dataset(a, b, c, d, e, f, to_string, to_int,to_lon,to_lat,to_eng,to
             try:
                 kalendar_kolona = dff[values].str.split("/",n=2)
             except:
-                    print("Nije moguce podeliti datum sa simbolom / ")
+                print("Nije moguce podeliti datum sa simbolom / ")
             try:
                 kalendar_kolona = dff[values].str.split(" ", n=2)
             except:
@@ -726,25 +732,35 @@ def changing_dataset(a, b, c, d, e, f, to_string, to_int,to_lon,to_lat,to_eng,to
                 print("Nije moguce podeliti datum sa simbolom . ")
             finally:
                 print("Nije moguce pretvoriti trazenu kolonu u tip KALENDAR")
-            dan = []
-            mesec = []
-            godina = []
+
             if(kalendar_kolona is not None):
                 if format_calendar == 1:
                     # DMG format
                     dan = kalendar_kolona[0]
                     mesec = kalendar_kolona[1]
                     godina = kalendar_kolona[2]
+                    dff[values[0]] = ['-'.join(d) for d in zip(godina, mesec, dan)]
+                    date_time.append(values[0])
+                    dimensions.remove(values[0])
+                    return html.P(["tesdt1"]), pd.DataFrame.to_dict(dff)
                 elif format_calendar ==2:
                     # MDG
                     dan = kalendar_kolona[1]
                     mesec = kalendar_kolona[0]
                     godina = kalendar_kolona[2]
+                    dff[values[0]] = ['-'.join(d) for d in zip(godina, mesec, dan)]
+                    date_time.append(values[0])
+                    dimensions.remove(values[0])
+                    return html.P(["tesdt2"]), pd.DataFrame.to_dict(dff)
                 else:
                     #GMD
-                    dan = kalendar_kolona[2]
-                    mesec = kalendar_kolona[1]
-                    godina = kalendar_kolona[1]
+                    dan = [kalendar_kolona[i][2] for i in range(0,len(kalendar_kolona))]
+                    mesec = [kalendar_kolona[i][1] for i in range(0,len(kalendar_kolona))]
+                    godina =  [kalendar_kolona[i][0] for i in range(0,len(kalendar_kolona))]
+                    dff[values[0]] = ['-'.join(d) for d in zip(godina, mesec, dan)]
+                    date_time.append(values[0])
+                    dimensions.remove(values[0])
+                    return html.P(["tesdt3"]), pd.DataFrame.to_dict(dff)
 
 
         if "change-to-english" in changed_id:
@@ -822,6 +838,10 @@ def changing_dataset(a, b, c, d, e, f, to_string, to_int,to_lon,to_lat,to_eng,to
                 elif values[0] in dimensions:
                     dimensions.remove(values[0])
                     dimensions.append(new_name_col)
+                elif values[0] in date_time:
+                    date_time.remove(values[0])
+                    date_time.append(new_name_col)
+
                 return html.P(["renaming"]), pd.DataFrame.to_dict(dff)
             else:
                 raise PreventUpdate
@@ -2203,16 +2223,6 @@ def render_content(tab, data, validated_data):
                                 id='change-format-day',
                                 value=2,
                             ),
-                            dbc.Label("Izaberi jezik unosa",className="text-primary"),
-                            dbc.RadioItems(
-                                options=[
-                                    {"label": "English", "value": 1},
-                                    {"label": "Srpski", "value": 2},
-                                    {"label": "Slovenščina", "value": 3},
-                                ],
-                                id='change-lang-calendar',
-                                value=1,
-                            ),
                             dbc.Button('Potvrdi', className="mt-2", color="success",
                                        id='confirm-change-to-calendar-btn',
                                        n_clicks=0),
@@ -2235,11 +2245,11 @@ def render_content(tab, data, validated_data):
                                 type="text"
                             ),
 
-                            dbc.Button('Rename Column', className="mt-2", color="info", id='rename-column-button', n_clicks=0)
+                            dbc.Button('Preimenuj kolonu', className="mt-2", color="info", id='rename-column-button', n_clicks=0)
                         ],
                             id="add-column-toast",
                             dismissable=True,
-                            header="Rename column",
+                            header="Preimenuj kolonu",
                             icon="info",
                             className="toast",
                             is_open=False
@@ -2288,277 +2298,278 @@ def render_content(tab, data, validated_data):
 
                 # prikaz sadrzaja za drugi tab kada se ucitaju podaci
                 # elif tab == 'Visualisation':
-                    return html.Div([
-                        html.Div(className="container", children=[
-                            html.Div(className="row ui-for-eda", children=[
-                                # srednji deo - trenutni graf/plot/figura
-                                html.Div(className="col-10", children=[
-                                    html.Div(className="row", style={"height": "100%"}, children=[
-                                        html.Div(className="col-2 p-0", children=[
-                                            html.Label("Nakon promene donjih parametara, kliknite ponovo na sliku grafikona za njegovo ponovno iscrtavanje."),
-                                            html.Br(),
-                                            html.Hr(),
-                                            html.H6("Podeli po boji:"),
-                                            # daq.ColorPicker(
-                                            #     id='colorpicker',
-                                            #     label="Choose color",
-                                            #     size=150
-                                            # ),
-                                            dcc.Dropdown(
-                                                options=[
-                                                    {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                                    range(0, df.columns.size)
-                                                ],
-                                                id="dropdown-color"
-                                            ),
-                                            html.Br(),
-                                            html.H6("Prikaži više detalja:"),
-                                            dcc.Dropdown(
-                                                options=[
-                                                    {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                                    range(0, df.columns.size)
-                                                ],
-                                                id="dropdown-detail",
-                                                multi=True
-                                            ),
-                                            html.Hr(),
-                                            html.H6("Podeli po veličini:"),
-                                            dcc.Dropdown(
-                                                options=[
-                                                    {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                                    range(0, df.columns.size)
-                                                ],
-                                                id="dropdown-size"
-                                            ),
-                                            html.Br(),
-                                            html.H6("Prilagodi veličinu: "),
-                                            dcc.Slider(
-                                                id='size-slider',
-                                                min=10,
-                                                max=80,
-                                                step=5,
-                                                value=20,
-                                            ),
+                pass
+        return html.Div([
+            html.Div(className="container", children=[
+                html.Div(className="row ui-for-eda", children=[
+                    # srednji deo - trenutni graf/plot/figura
+                    html.Div(className="col-10", children=[
+                        html.Div(className="row", style={"height": "100%"}, children=[
+                            html.Div(className="col-2 p-0", children=[
+                                html.Label("Nakon promene donjih parametara, kliknite ponovo na sliku grafikona za njegovo ponovno iscrtavanje."),
+                                html.Br(),
+                                html.Hr(),
+                                html.H6("Podeli po boji:"),
+                                # daq.ColorPicker(
+                                #     id='colorpicker',
+                                #     label="Choose color",
+                                #     size=150
+                                # ),
+                                dcc.Dropdown(
+                                    options=[
+                                        {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                        range(0, df.columns.size)
+                                    ],
+                                    id="dropdown-color"
+                                ),
+                                html.Br(),
+                                html.H6("Prikaži više detalja:"),
+                                dcc.Dropdown(
+                                    options=[
+                                        {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                        range(0, df.columns.size)
+                                    ],
+                                    id="dropdown-detail",
+                                    multi=True
+                                ),
+                                html.Hr(),
+                                html.H6("Podeli po veličini:"),
+                                dcc.Dropdown(
+                                    options=[
+                                        {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                        range(0, df.columns.size)
+                                    ],
+                                    id="dropdown-size"
+                                ),
+                                html.Br(),
+                                html.H6("Prilagodi veličinu: "),
+                                dcc.Slider(
+                                    id='size-slider',
+                                    min=10,
+                                    max=80,
+                                    step=5,
+                                    value=20,
+                                ),
 
-                                            html.Br(),
-                                            html.P("Prikaži samo filtrirane podatke: "),
-                                            dcc.Dropdown(
-                                                options=[
-                                                    {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                                    range(0, df.columns.size)
-                                                ],
-                                                id="dropdown-filter",
-                                                multi=True,
-                                            ),
-                                            html.Div(id="div-for-filtering"),
+                                html.Br(),
+                                html.P("Prikaži samo filtrirane podatke: "),
+                                dcc.Dropdown(
+                                    options=[
+                                        {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                        range(0, df.columns.size)
+                                    ],
+                                    id="dropdown-filter",
+                                    multi=True,
+                                ),
+                                html.Div(id="div-for-filtering"),
 
-                                            html.Hr(),
-                                            # to do add callback for putting value in storage-for-figure
-                                            html.Div([
-                                                dbc.RadioItems(
-                                                    options=[
-                                                        {'label': '', 'value': x} for x in colorscales
-                                                    ],
-                                                    value='',
-                                                    id="radioitems-colorscale"
-                                                ),
-                                                html.Ul([
-                                                    html.Li([], className="bluered"),
-                                                    html.Li([], className="cividis"),
-                                                    html.Li([], className="darkmint"),
-                                                    html.Li([], className="greys"),
-                                                    html.Li([], className="inferno"),
-                                                    html.Li([], className="portland"),
-                                                    html.Li([], className="viridis")
-                                                ], style={"position": "relative"})], className="d-inline",
-                                                style={'position': 'relative'}),
-                                            html.Hr(),
-                                            # html.H6("Faced rows"),
-                                            # dcc.Dropdown(
-                                            #     options=[
-                                            #         {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                            #         range(0, df.columns.size)
-                                            #     ],
-                                            #     id="dropdown-faced-rows",
-                                            #     multi=True
-                                            # ),
-                                            # html.H6("Faced column(s)"),
-                                            # dcc.Dropdown(
-                                            #     options=[
-                                            #         {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                            #         range(0, df.columns.size)
-                                            #     ],
-                                            #     id="dropdown-faced-cols",
-                                            #     multi=True
-                                            # ),
-                                        ]),
-                                        html.Div(className="col-10", children=[
-                                            html.Br(),
-                                                 html.Div(className="row ml-1 mr-3 mb-1 theme-dark border rounded", children=[
-                                                     html.P("Kolone", className="col-sm-3 text-light font-weight-bold"),
-                                                         html.Div([
-                                                              dcc.Dropdown(
-                                                                options=[
-                                                                    {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                                                    range(0, df.columns.size)
-                                                                ],
-                                                                multi=True,
-                                                                id="dropdown-columns",
-                                                                style={'color': '#262626'}
-                                                            )
-                                                        ], className="col-sm p-1")
-                                                ]),
-                                            html.Div(className="row ml-1 mr-3 mb-1 theme-dark border rounded", children=[
-                                                html.P("Vrste", className="col-sm-3 text-light font-weight-bold"),
-                                                html.Div([
-                                                    dcc.Dropdown(
-                                                        options=[
-                                                            {'label': df.columns[i], 'value': df.columns[i]} for i in
-                                                            range(0, df.columns.size)
-                                                        ],
-                                                        multi=True,
-                                                        id="dropdown-rows",
-                                                        style={'color':'#262626'}
-                                                    )
-                                                ],className="col-sm p-1")
-                                            ]),
-                                            dbc.Button(["Izaberi grafikon"], id="check-for-chart", n_clicks=0, color="primary",
-                                                       className="ml-1"),
-                                            html.Div(className="row", children=[
-
-                                                dcc.Graph(
-                                                    className="col",
-                                                    id='current-graph',
-
-                                                ),
-                                                dbc.Toast([
-                                                    dbc.Input(id="interval-arima",type="number",min=1,max=365,step=1,placeholder="Unesite interval ARIMA modela"),
-                                                    dbc.Input(id="num_of_days_forecast",type="number",min=1,max=365,step=1,placeholder="Pogled u budućnost - broj dana"),
-                                                    dbc.Button("Izvrši", className="col-5 ml-4 mt-1 bg-success",
-                                                               id="forecast-btn")
-                                                ],
-                                                    id="prediction-toast",
-                                                    header="Predikcija vremenskih serija",
-                                                    icon="primary",
-                                                    is_open=False,
-                                                    dismissable=True,
-                                                    style={'zIndex':'1'}
-                                                ),
-
-                                            ]),
-                                            # html.Div(id="div-for-prediction", className="row",children=[
-                                            #      ]),
-                                       ]),
-                                    ]),
-                                ]),
-
-                                # preporuceni grafovi/plotovi/figure
-                                html.Div(className="col-2", children=[
-                                    ### MODALS FOR INFO ABOUT CHARTS ###
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Map chart header"),
-                                        dbc.ModalBody("Choose COUNTRY NAME or SHORT CODE from dropmenu"),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-map-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-map-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Scatter map header"),
-                                        dbc.ModalBody("unavailable for now"),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-scatter-map-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-scatter-map-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Density map chart header"),
-                                        dbc.ModalBody("In column dropmenu choose LATITUDE. In row dropdown choose LONGITUDE. If coords are not in dataset, choose COUNTRY NAME or SHORT CODE from dropmenu"),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-density-map-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-density-map-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Bubble map chart header"),
-                                        dbc.ModalBody("In column dropmenu choose LATITUDE. In row dropdown choose LONGITUDE. If coords are not in dataset, choose COUNTRY NAME or SHORT CODE from dropmenu. Separate by SIZE choosing feature from sidebar"),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-bubble-map-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-bubble-map-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Paramaters for showing bar chart"),
-                                        dbc.ModalBody("In column dropmenu choose ONE dimension. In row dropdown choose ONE measure."),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-bar-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-bar-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Paramaters for showing Pie chart"),
-                                        dbc.ModalBody("In column dropmenu choose ONE dimension. In row dropdown choose ONE measure."),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-pie-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-pie-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Paramaters for showing Scatter chart"),
-                                        dbc.ModalBody([html.P("In column dropmenu choose ONE measure."),html.P("In row dropdown choose ONE measure.")]),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-scatter-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-scatter-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Paramaters for Bubble chart "),
-                                        dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ONE measure. On sidebar, choose ONE measure to separate by SIZE"),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-bubble-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-bubble-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Paramaters for Line chart"),
-                                        dbc.ModalBody("In column dropmenu choose ONE date. In row dropdown choose ONE measure."),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Zatvori", id="close-info-line-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-line-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Paramaters for Histogram chart"),
-                                        dbc.ModalBody("In rows dropdown choose ONE measure."),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Close", id="close-info-histogram-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-histogram-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Paramaters for Heatmap chart"),
-                                        dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ONE measure."),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Close", id="close-info-heatmap-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-heat-chart"),
-                                    dbc.Modal([
-                                        dbc.ModalHeader("Paramaters for Box-plot chart"),
-                                        dbc.ModalBody("In column dropmenu choose ONE measure. In row dropdown choose ZERO/ONE dimension."),
-                                        dbc.ModalFooter(
-                                            dbc.Button("Close", id="close-info-box-btn", className="ml-auto")
-                                        )
-                                    ], id="modal-box-chart"),
-                                    #################
+                                html.Hr(),
+                                # to do add callback for putting value in storage-for-figure
+                                html.Div([
+                                    dbc.RadioItems(
+                                        options=[
+                                            {'label': '', 'value': x} for x in colorscales
+                                        ],
+                                        value='',
+                                        id="radioitems-colorscale"
+                                    ),
+                                    html.Ul([
+                                        html.Li([], className="bluered"),
+                                        html.Li([], className="cividis"),
+                                        html.Li([], className="darkmint"),
+                                        html.Li([], className="greys"),
+                                        html.Li([], className="inferno"),
+                                        html.Li([], className="portland"),
+                                        html.Li([], className="viridis")
+                                    ], style={"position": "relative"})], className="d-inline",
+                                    style={'position': 'relative'}),
+                                html.Hr(),
+                                # html.H6("Faced rows"),
+                                # dcc.Dropdown(
+                                #     options=[
+                                #         {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                #         range(0, df.columns.size)
+                                #     ],
+                                #     id="dropdown-faced-rows",
+                                #     multi=True
+                                # ),
+                                # html.H6("Faced column(s)"),
+                                # dcc.Dropdown(
+                                #     options=[
+                                #         {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                #         range(0, df.columns.size)
+                                #     ],
+                                #     id="dropdown-faced-cols",
+                                #     multi=True
+                                # ),
+                            ]),
+                            html.Div(className="col-10", children=[
+                                html.Br(),
+                                html.Div(className="row ml-1 mr-3 mb-1 theme-dark border rounded", children=[
+                                    html.P("Kolone", className="col-sm-3 text-light font-weight-bold"),
                                     html.Div([
-                                        dbc.Label("Ukoliko koordinate nisu na raspolaganju, izaberite lokaciju:",className="text-light ml-1"),
                                         dcc.Dropdown(
                                             options=[
-                                                {'label': dimensions[i], 'value': dimensions[i]} for i in
-                                                range(0, len(dimensions))
+                                                {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                                range(0, df.columns.size)
                                             ],
-                                            id="dropdown-geo-code",
-                                            placeholder="Izaberi državu ili njen kod"
-                                        )], className="theme-dark ml-1"),
-                                    html.Div(choose_figure),
-                                    dcc.Store(id="storage-for-figure", storage_type="memory"),
-                                    html.Div([
-
-                                    ], className="row justify-content-start"),
+                                            multi=True,
+                                            id="dropdown-columns",
+                                            style={'color': '#262626'}
+                                        )
+                                    ], className="col-sm p-1")
                                 ]),
+                                html.Div(className="row ml-1 mr-3 mb-1 theme-dark border rounded", children=[
+                                    html.P("Vrste", className="col-sm-3 text-light font-weight-bold"),
+                                    html.Div([
+                                        dcc.Dropdown(
+                                            options=[
+                                                {'label': df.columns[i], 'value': df.columns[i]} for i in
+                                                range(0, df.columns.size)
+                                            ],
+                                            multi=True,
+                                            id="dropdown-rows",
+                                            style={'color':'#262626'}
+                                        )
+                                    ],className="col-sm p-1")
+                                ]),
+                                dbc.Button(["Izaberi grafikon"], id="check-for-chart", n_clicks=0, color="primary",
+                                           className="ml-1"),
+                                html.Div(className="row", children=[
+
+                                    dcc.Graph(
+                                        className="col",
+                                        id='current-graph',
+
+                                    ),
+                                    dbc.Toast([
+                                        dbc.Input(id="interval-arima",type="number",min=1,max=365,step=1,placeholder="Unesite interval ARIMA modela"),
+                                        dbc.Input(id="num_of_days_forecast",type="number",min=1,max=365,step=1,placeholder="Pogled u budućnost - broj dana"),
+                                        dbc.Button("Izvrši", className="col-5 ml-4 mt-1 bg-success",
+                                                   id="forecast-btn")
+                                    ],
+                                        id="prediction-toast",
+                                        header="Predikcija vremenskih serija",
+                                        icon="primary",
+                                        is_open=False,
+                                        dismissable=True,
+                                        style={'zIndex':'1'}
+                                    ),
+
+                                ]),
+                                # html.Div(id="div-for-prediction", className="row",children=[
+                                #      ]),
                             ]),
                         ]),
                     ]),
+
+                    # preporuceni grafovi/plotovi/figure
+                    html.Div(className="col-2", children=[
+                        ### MODALS FOR INFO ABOUT CHARTS ###
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju mape"),
+                            dbc.ModalBody("Izaberite kolonu koja sadrži imena država ili kod sa 3 karaktera koji je bliže određuje u odgovarajućem padajućem meniju. Podelite podatke vizuelno po BOJI u odgovarajućem padajućem meniju sa strane."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-map-btn", className="ml-auto")
+                            )
+                        ], id="modal-map-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju mape sa tačkastim prikazom"),
+                            dbc.ModalBody("unavailable for now"),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-scatter-map-btn", className="ml-auto")
+                            )
+                        ], id="modal-scatter-map-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju mape gustine"),
+                            dbc.ModalBody("U padajućem meniju za KOLONU izaberite G.ŠIRINU (LATITUDE). U padajućem meniju za RED, izaberite G.DUŽINU (LONGITUDE). Ukoliko koordinate nisu prisutne među podacima, izaberite IME DRŽAVE ili KOD DRŽAVE (sa 3 cifara) u predviđenom padajućem meniju. Podelite podatke vizuelno po BOJI u odgovarajućem padajućem meniju sa strane."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-density-map-btn", className="ml-auto")
+                            )
+                        ], id="modal-density-map-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju mape sa oznakama"),
+                            dbc.ModalBody("U padajućem meniju za KOLONU izaberite G.ŠIRINU (LATITUDE). U padajućem meniju za RED, izaberite G.DUŽINU (LONGITUDE). Ukoliko koordinate nisu prisutne među podacima, izaberite IME DRŽAVE ili KOD DRŽAVE (sa 3 cifara) u predviđenom padajućem meniju. Podelite podatke vizuelno po VELIČINI u odgovarajućem padajućem meniju sa strane."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-bubble-map-btn", className="ml-auto")
+                            )
+                        ], id="modal-bubble-map-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju bar grafikona"),
+                            dbc.ModalBody("U padajućem meniju za KOLONU izaberite JEDNU dimenziju (kategoriju). U padajućem meniju za RED, izaberite jednu numeričku vrednost."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-bar-btn", className="ml-auto")
+                            )
+                        ], id="modal-bar-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju pita grafikona"),
+                            dbc.ModalBody("U padajućem meniju za KOLONU izaberite JEDNU dimenziju (kategoriju). U padajućem meniju za RED, izaberite jednu numeričku vrednost."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-pie-btn", className="ml-auto")
+                            )
+                        ], id="modal-pie-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju 'scatter' grafikona "),
+                            dbc.ModalBody([html.P("U padajućem meniju za KOLONU i RED izaberite PO JEDNU numeričku vrednost.")]),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-scatter-btn", className="ml-auto")
+                            )
+                        ], id="modal-scatter-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju mehur grafikon"),
+                            dbc.ModalBody("U padajućem meniju za KOLONU i RED izaberite PO JEDNU numeričku vrednost. Izaberite JEDNU numeričku vrednost sa strane, kako bi podelili po VELIČINI."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-bubble-btn", className="ml-auto")
+                            )
+                        ], id="modal-bubble-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju linijskog grafikona"),
+                            dbc.ModalBody("U padajućem meniju za KOLONU izaberite kolonu tipa DATUM. U padajućem meniju za RED izaberite JEDNU numeričku vrednost."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-line-btn", className="ml-auto")
+                            )
+                        ], id="modal-line-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju histograma"),
+                            dbc.ModalBody("U padajućem meniju za RED izaberite JEDNU numeričku vrednost."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-histogram-btn", className="ml-auto")
+                            )
+                        ], id="modal-histogram-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju 2-D histograma"),
+                            dbc.ModalBody("U padajućem meniju za KOLONU i RED izaberite PO JEDNU numeričku vrednost."),
+                            dbc.ModalFooter(
+                                dbc.Button("Zatvori", id="close-info-heatmap-btn", className="ml-auto")
+                            )
+                        ], id="modal-heat-chart"),
+                        dbc.Modal([
+                            dbc.ModalHeader("Informacije o iscrtavanju 'box-chart' grafikona"),
+                            dbc.ModalBody("U padajućem meniju za KOLONU izaberite JEDNU numeričku vrednost. U padajućem meniju za RED izaberite MAKS. JEDNU dimenziju (kategoriju)."),
+                            dbc.ModalFooter(
+                                dbc.Button("Close", id="close-info-box-btn", className="ml-auto")
+                            )
+                        ], id="modal-box-chart"),
+                        #################
+                        html.Div([
+                            dbc.Label("Ukoliko koordinate nisu na raspolaganju, izaberite lokaciju:",className="text-light ml-1"),
+                            dcc.Dropdown(
+                                options=[
+                                    {'label': dimensions[i], 'value': dimensions[i]} for i in
+                                    range(0, len(dimensions))
+                                ],
+                                id="dropdown-geo-code",
+                                placeholder="Izaberi državu ili njen kod"
+                            )], className="theme-dark ml-1"),
+                        html.Div(choose_figure),
+                        dcc.Store(id="storage-for-figure", storage_type="memory"),
+                        html.Div([
+
+                        ], className="row justify-content-start"),
+                    ]),
+                ]),
+            ]),
+        ]),
 
 
 
